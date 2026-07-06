@@ -78,13 +78,20 @@ pod update ShopliveSDK
 | deployment target 관련 빌드 에러 | 앱 타겟의 최소 iOS 버전이 SDK 요구(13.0)보다 낮음 | 프로젝트 Deployment Target을 13.0 이상으로 |
 | clone / 인증 에러 | private 저장소 접근 자격 증명 미설정 (로컬 또는 CI) | [2](#2-저장소-접근-권한) 참고 |
 
-해결되지 않으면 `pod install --verbose` 출력과 함께 아래로 문의해 주세요.
+해결되지 않으면 [GitHub 이슈](https://github.com/shoplive/pod-specs/issues/new)로 문의해 주세요. 아래 내용을 함께 남겨주시면 빠르게 확인할 수 있습니다.
 
 ---
 
 ## 6. 문의
 
-- 기술 문의: **support@shoplive.com**
+연동 중 문제가 있으면 **[GitHub 이슈](https://github.com/shoplive/pod-specs/issues/new)** 로 등록해 주세요.
+
+재현과 확인을 위해 다음을 포함해 주세요:
+
+- 사용 중인 SDK 버전 (`pod 'ShopliveSDK', '...'`)
+- `pod --version` / Xcode 버전 / iOS Deployment Target
+- 에러 메시지와 `pod install --verbose` 출력 (민감 정보는 제외)
+- Podfile의 `source` 및 `pod` 선언 부분
 
 ---
 
