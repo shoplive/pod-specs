@@ -132,6 +132,27 @@ pod spec lint Specs/ShopliveSDK/1.0.0/ShopliveSDK.podspec \
 | 시뮬레이터/아키텍처 빌드 에러 | XCFramework에 시뮬레이터 slice 누락 | SDK 빌드 파이프라인에서 `-destination` 확인 후 재빌드·재업로드 (버전을 올려서!) |
 | 어제는 됐는데 오늘 실패 | CocoaPods/Xcode 버전 차이 | `pod --version`, `xcodebuild -version`을 팀 표준과 맞춤 |
 
+### 3-5. PR 자동 검증 (GitHub Actions)
+
+PR로 podspec을 추가/수정하면 [`podspec-lint` 워크플로](.github/workflows/podspec-lint.yml)가 자동으로 실행됩니다:
+
+- PR에서 **추가/수정된 podspec만** 골라 macOS 러너에서 `pod spec lint --private`를 실제로 실행합니다 (삭제만 있는 yank PR은 lint를 건너뜁니다).
+- 결과는 PR 코멘트로 게시되며, 판정은 3단계입니다:
+  - ✅ **PASS** — 경고 없이 통과
+  - ⚠️ **PASS (경고 있음)** — `--allow-warnings`로만 통과. 코멘트의 로그에서 경고 내용을 반드시 읽고 판단하세요 (3-2의 `--allow-warnings` 주의사항과 동일).
+  - ❌ **FAIL** — 체크 실패. 코멘트의 로그와 3-4의 표로 원인을 찾으세요.
+- **이미 base 브랜치에 존재하던 podspec을 수정하는 PR**은 배포된 버전을 고치는 것일 수 있어 "불변 원칙([6-1](#6-1-배포된-버전은-절대-수정하지-않는다-불변-원칙)) 확인 필요" 경고가 붙습니다.
+
+**CI가 통과해도 생략되지 않는 것:**
+
+- CI lint는 로컬 lint(3-2)와 동일한 검증의 **이중 안전망**이지, 로컬 검증을 대체하는 것이 아닙니다. PR 올리기 전에 로컬에서 먼저 돌리는 것이 왕복 시간을 아낍니다 (CI는 macOS 러너 과금도 큽니다).
+- 배포 후 소비자 관점 설치 검증(4-3)은 CI가 해주지 않습니다.
+
+**운영 참고 (관리자용):**
+
+- `s.source`가 가리키는 SDK 저장소가 private이면, 해당 저장소 read 권한이 있는 PAT을 repo 시크릿 `SDK_REPO_TOKEN`으로 등록해야 CI가 Release asset을 다운로드할 수 있습니다. 미등록 시 lint가 404로 실패합니다.
+- `pod repo push`는 main에 직접 push하므로 **이 CI를 타지 않습니다**. PR 기반 배포를 강제하려면 main 브랜치 보호 규칙(직접 push 금지 + `pod spec lint` 체크 필수)을 함께 설정해야 합니다.
+
 ---
 
 ## 4. 배포 (pod repo push)
