@@ -14,7 +14,7 @@ Pod::Spec.new do |spec|
   # 이 에셋은 release.sh 의 MODULES 목록 밖이라 릴리즈 생성 후 gh release upload 로 붙인다.
   spec.source = {
     :http    => "https://github.com/shoplive/shoplive-sdk-ios/releases/download/#{spec.version}/ShopliveSDKCommon-pod.zip",
-    :sha256  => "eb155d74f6aa06bfde958ca3342218e56fbb7a7b66c63b76eee15d6ac7c2ca99",
+    :sha256  => "96d3bc8d71428f3c1451753fb314c306135685db54952128dd15aee0eb1e0cd6",
     :flatten => false
   }
 

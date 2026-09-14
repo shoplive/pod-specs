@@ -12,7 +12,7 @@ Pod::Spec.new do |spec|
   # 모듈명은 ShopLiveSDK 이며(import ShopLiveSDK), pod 이름과 다른 것은 1.8.x 와 같다.
   spec.source = {
     :http    => "https://github.com/shoplive/shoplive-sdk-ios/releases/download/#{spec.version}/ShopLiveSDK.xcframework.zip",
-    :sha256  => "a67ff7e67aa9eb456659e3fb2ee056afd5b7223837673e844af29f23a0e6c898",
+    :sha256  => "d31f0f6837d00b01f0532b9dd1200df3e59b1c15ec44fcb97ce7a80984a2a199",
     :flatten => false
   }
 
