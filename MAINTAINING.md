@@ -33,6 +33,27 @@ Specs/
 | 파일명 | `s.name`과 동일한 `{SDK명}.podspec` | pod 탐색 실패 |
 | 한 디렉토리 = 한 버전 | 버전당 podspec 1개만 | 중복 정의로 resolve 실패 |
 
+### 1-1. SDK 계열별 pod 구성
+
+이 저장소는 1.x와 3.x 두 계열을 **별개 pod 이름으로** 함께 둡니다. 한쪽 배포가 다른 쪽에 영향을 주지 않습니다.
+
+| 계열 | pod | 바이너리 출처 | 의존 |
+|---|---|---|---|
+| 1.x | `ShopLive` | 1.9.0~: `shoplive-sdk-ios` 릴리즈 `ShopLiveSDK.xcframework.zip` / 1.8.x: `shoplive/ios-sdk` git 태그 | 선언 없음 — 고객이 `ShopliveSDKCommon`을 직접 선언 |
+| 1.x | `ShopliveSDKCommon` | 1.9.0~: `shoplive-sdk-ios` 릴리즈 `ShopliveSDKCommon-pod.zip` (pod 전용 합본) / 1.8.x: `shoplive/common-ios` git 태그 | 없음 |
+| 1.x | `ShopliveShortformSDK` | `shoplive/shortform-ios` git 태그 (1.8.13까지) | 없음 |
+| 3.x | `ShoplivePlayerSDK` | 이하 3.x 모두 `shoplive-sdk-ios` 릴리즈 `ShoplivePlayerSDK.xcframework.zip` | Core · WebRTCHelper · ShopliveWebRTC (`= 같은 버전`) |
+| 3.x | `ShopliveStreamerSDK` | `ShopliveStreamerSDK.xcframework.zip` | Core · WebRTCHelper · ShopliveWebRTC (`= 같은 버전`) |
+| 3.x | `ShopliveCore` | `ShopliveCore.xcframework.zip` | 없음 |
+| 3.x | `ShopLiveWebRTCHelperSDK` | `ShopLiveWebRTCHelperSDK.xcframework.zip` | ShopliveWebRTC (`= 같은 버전`) |
+| 3.x | `ShopliveWebRTC` | `WebRTC.xcframework.zip` | 없음 |
+
+3.x 규칙:
+
+- 3.x는 SwiftPM `Package.swift`의 binary target과 **같은 zip을 그대로** 참조합니다. pod 전용 에셋을 따로 만들지 않으므로 릴리즈에 손댈 일이 없습니다. `:sha256`은 Package.swift의 checksum(= 릴리즈 에셋 digest)과 같은 값입니다.
+- 3.x pod 다섯 개는 **항상 같은 버전으로 함께** 추가합니다. 내부 의존을 `= 같은 버전`으로 고정해 같은 빌드의 바이너리끼리만 섞이게 합니다.
+- WebRTC pod 이름이 `WebRTC`가 아니라 `ShopliveWebRTC`인 이유는 공식 CDN(trunk)에 `WebRTC`라는 구 Google pod이 이미 있기 때문입니다. 담긴 프레임워크와 모듈명은 `WebRTC` 그대로입니다.
+
 ---
 
 ## 2. Spec Repo 로컬 등록
@@ -123,6 +144,7 @@ pod spec lint Specs/ShopliveSDK/1.0.0/ShopliveSDK.podspec \
 PR로 podspec을 추가/수정하면 [`podspec-lint` 워크플로](.github/workflows/podspec-lint.yml)가 자동으로 실행됩니다:
 
 - PR에서 **추가/수정된 podspec만** 골라 macOS 러너에서 `pod spec lint --private`를 실제로 실행합니다 (삭제만 있는 yank PR은 lint를 건너뜁니다).
+- 의존 pod은 main이 아니라 **PR 머지 결과 트리**에서 찾습니다 (체크아웃을 `shoplive-pr`이라는 로컬 spec repo로 등록해 `--sources`에 넣음). 그래서 3.x처럼 서로 의존하는 pod 여러 개를 **한 PR로** 올려도 lint가 통과합니다.
 - 결과는 PR 코멘트로 게시되며, 판정은 3단계입니다:
   - ✅ **PASS** — 경고 없이 통과
   - ⚠️ **PASS (경고 있음)** — `--allow-warnings`로만 통과. 코멘트의 로그에서 경고 내용을 반드시 읽고 판단하세요 (3-2의 `--allow-warnings` 주의사항과 동일).
@@ -232,8 +254,15 @@ pod install --repo-update
 
 ### 6-4. 여러 SDK를 관리할 때
 
-- SDK 간 의존성이 있으면(`s.dependency 'ShopliveCommon', '~> x.y'`) **의존되는 쪽을 먼저 배포**합니다.
+- SDK 간 의존성이 있으면(`s.dependency 'ShopliveCommon', '~> x.y'`) **의존되는 쪽을 먼저 배포**합니다. 3.x 순서는 `ShopliveWebRTC` → `ShopliveCore` → `ShopLiveWebRTCHelperSDK` → `ShoplivePlayerSDK` · `ShopliveStreamerSDK`입니다.
 - lint/push 시 `--sources`에 이 repo를 포함해야 의존성 resolve가 됩니다 (3-2 참고).
+- 의존 pod이 아직 main에 없는 상태에서 로컬 lint를 돌리려면, 작업 트리를 커밋한 로컬 clone을 spec repo로 등록해 source로 씁니다 (CI와 같은 방식):
+  ```bash
+  pod repo add shoplive-local /path/to/pod-specs-clone   # 새 podspec 이 커밋된 로컬 clone
+  pod spec lint Specs/ShoplivePlayerSDK/3.0.2/ShoplivePlayerSDK.podspec \
+    --private --verbose --sources=shoplive-local,https://cdn.cocoapods.org/
+  pod repo remove shoplive-local                          # 끝나면 제거
+  ```
 
 ---
 

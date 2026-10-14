@@ -22,9 +22,9 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 30
     env:
-      # lint --sources 에 넘길 spec 소스 (이 repo + 공식 CDN).
-      # podspec이 다른 private pod에 의존하는 경우를 대비해 항상 포함한다.
-      LINT_SOURCES: 'https://github.com/shoplive/pod-specs.git,https://cdn.cocoapods.org/'
+      # lint --sources 에 넘길 spec 소스 (이 PR 의 트리 + 공식 CDN).
+      # shoplive-pr 은 아래 "PR 트리를 lint 용 spec source 로 등록" 단계에서 만든다.
+      LINT_SOURCES: 'shoplive-pr,https://cdn.cocoapods.org/'
       # s.source 가 가리키는 SDK 저장소(예: shoplive/ios-sdk)가 private이면
       # 그 저장소 read 권한이 있는 PAT을 SDK_REPO_TOKEN 시크릿으로 등록해야 한다.
       # 기본 GITHUB_TOKEN은 이 저장소에만 접근 가능해서, private 저장소의
@@ -41,9 +41,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # pod spec lint --sources 가 이 spec repo를 clone할 때 쓸 자격 증명
-          git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-
           # s.source(:http) Release asset 다운로드용 자격 증명.
           # CocoaPods 다운로더는 curl을 --netrc-optional 로 호출하므로 ~/.netrc 를 읽는다.
           TOKEN="${SDK_REPO_TOKEN:-$GITHUB_TOKEN}"
@@ -68,6 +65,15 @@ jobs:
               echo 'FILES_EOF'
             } >> "$GITHUB_OUTPUT"
           fi
+
+      - name: PR 트리를 lint 용 spec source 로 등록
+        if: steps.detect.outputs.changed == 'true'
+        run: |
+          # 같은 PR 에서 새로 추가한 pod 끼리 의존하면(예: ShoplivePlayerSDK → ShopliveCore)
+          # main 의 spec repo 에는 의존 pod 이 아직 없어 lint 가 resolve 단계에서 실패한다.
+          # 체크아웃된 PR 머지 트리(= main 의 spec 전부 + 이 PR 의 추가분)를 로컬 spec repo 로
+          # 등록해 lint source 로 쓴다.
+          pod repo add shoplive-pr "$GITHUB_WORKSPACE"
 
       - name: pod spec lint 실행
         id: lint
