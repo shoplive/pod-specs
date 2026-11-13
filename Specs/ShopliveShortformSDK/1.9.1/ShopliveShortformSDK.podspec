@@ -11,7 +11,7 @@ Pod::Spec.new do |spec|
                  LICENSE
               }
 
-  spec.author             = { "Shoplive" => "shoplive-eng@shoplive.cloud" }
+  spec.author             = { "Shoplive" => "mobile@shoplive.cloud" }
   spec.platform     = :ios
   spec.ios.deployment_target = '15.0'
   spec.swift_version = "5"
