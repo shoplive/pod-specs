@@ -17,7 +17,7 @@ Pod::Spec.new do |spec|
   # Shoplive 바이너리가 아니라 WebRTC 프로젝트(BSD) 빌드라, xcframework 에 동봉된 라이선스를 그대로 쓴다.
   spec.license = { :type => 'BSD', :file => 'WebRTC.xcframework/LICENSE.md' }
 
-  spec.author             = { "Shoplive" => "shoplive-eng@shoplive.cloud" }
+  spec.author             = { "Shoplive" => "mobile@shoplive.cloud" }
   spec.platform     = :ios
   spec.ios.deployment_target = '15.0'
   spec.vendored_frameworks = 'WebRTC.xcframework'
